@@ -95,6 +95,12 @@ Test definitions and imported reports should be treated as untrusted input. An e
 
 The repository currently contains the project brief and license only. There is no functioning test-management system, no completed Playwright integration, and no verified coverage or release-readiness metric yet. Badges and performance claims will be added only when real CI evidence exists.
 
+## Author & Development
+
+**Project author and solo developer:** [Nurul Faiyaz](https://github.com/tracolerd).
+
+This project is independently developed and maintained by Nurul Faiyaz. AI-assisted tools may be used as part of the development workflow; the project author remains responsible for technical decisions, code review, validation, and maintenance.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
