@@ -1,6 +1,9 @@
 <p align="center">
   <img src="https://capsule-render.vercel.app/api?type=waving&color=0:07192C,50:2563EB,100:0B1220&height=190&section=header&text=AssertLane&fontSize=42&fontColor=F1F5F9&fontAlignY=38&animation=fadeIn&desc=Test%20evidence%2C%20execution%20history%20and%20release-readiness%20workflows&descAlignY=61&descSize=15" alt="AssertLane animated project banner" width="100%" />
 </p>
+<h1 align="center">AssertLane</h1>
+<p align="center"><img src="https://img.shields.io/badge/Stage-Planning-8B5CF6" alt="Planning stage" /></p>
+
 
 **Turn test activity into evidence for release decisions.**
 
