@@ -110,3 +110,20 @@ def import_results(run_id: str, report: schemas.ImportReportRequest, db: Session
     if not crud.get_test_run(db, run_id):
         raise HTTPException(status_code=404, detail="Test Run not found")
     return crud.import_test_results(db=db, run_id=run_id, report=report)
+from fastapi.responses import HTMLResponse
+@app.get("/demo", response_class=HTMLResponse)
+def get_demo_page():
+    html_content = """
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <title>AssertLane Demo</title>
+        </head>
+        <body>
+            <h1>Welcome to AssertLane</h1>
+            <p>This is a local demo target for Playwright automation tests.</p>
+            <button id="test-button">Click Me</button>
+        </body>
+    </html>
+    """
+    return HTMLResponse(content=html_content, status_code=200)

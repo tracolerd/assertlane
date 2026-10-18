@@ -7,3 +7,9 @@ __pycache__/
 *.sqlite3
 
 test.db
+
+automation/node_modules/
+automation/test-results/
+automation/playwright-report/
+
+automation/results.json
