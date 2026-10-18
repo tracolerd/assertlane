@@ -1,32 +1,50 @@
-# React + TypeScript + Vite
+<p align="center">
+  <img src="../assets/assertlane-banner.svg" alt="AssertLane animated banner" width="100%" />
+</p>
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+<h1 align="center">AssertLane Frontend</h1>
 
-Currently, two official plugins are available:
+<p align="center">
+  <strong>React + TypeScript + Vite project UI.</strong>
+</p>
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+<p align="center">
+  <a href="../README.md">Root README</a> ·
+  <a href="../docs/RELEASE_AUDIT.md">Release readiness audit</a> ·
+  <a href="https://assertlane.netlify.app/">Frontend preview</a>
+</p>
 
-## React Compiler
+## Current scope
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+The current frontend provides a small project dashboard that displays backend status and lets a user create and list projects. Suite, case, test-run, and test-result workflows are currently represented by backend API routes, not complete frontend screens.
 
-## Expanding the Oxlint configuration
+## Stack
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+- React 19 and TypeScript
+- Vite
+- Tailwind CSS
+- Axios for HTTP requests
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+## Local setup
+
+From this directory:
+
+```bash
+npm ci
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+The current source hard-codes the API origin as `http://127.0.0.1:8000`. Before using the UI from a different browser origin, make the API URL configurable and add a strict CORS allowlist to FastAPI. A hosted frontend does not make a local API available to remote visitors.
+
+Create a static production bundle with:
+
+```bash
+npm run build
+npm run preview
+```
+
+The production frontend is only a static site; the API must be deployed separately and configured before end-to-end hosted use can work.
+
+## Security note
+
+The current backend has no authentication or authorization controls. Do not use this frontend with confidential test evidence or against a publicly exposed API until the blockers in the [release audit](../docs/RELEASE_AUDIT.md) are resolved.
