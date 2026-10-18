@@ -1,104 +1,248 @@
 <p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:07192C,50:2563EB,100:0B1220&height=190&section=header&text=AssertLane&fontSize=42&fontColor=F1F5F9&fontAlignY=38&animation=fadeIn&desc=Test%20evidence%2C%20execution%20history%20and%20release-readiness%20workflows&descAlignY=61&descSize=15" alt="AssertLane animated project banner" width="100%" />
+  <img src="assets/assertlane-banner.svg" alt="AssertLane — animated quality engineering and release-evidence banner" width="100%" />
 </p>
+
 <h1 align="center">AssertLane</h1>
-<p align="center"><img src="https://img.shields.io/badge/Stage-Planning-8B5CF6" alt="Planning stage" /></p>
 
+<p align="center">
+  <strong>Turn test activity into evidence for release decisions.</strong><br/>
+  Track projects, test cases, execution runs and imported results—with a clear path from quality work to release review.
+</p>
 
-**Turn test activity into evidence for release decisions.**
+<p align="center">
+  <a href="https://assertlane.netlify.app/"><img src="https://img.shields.io/badge/Live%20Frontend-AssertLane.netlify.app-0F766E?style=for-the-badge&logo=netlify&logoColor=white" alt="Live frontend preview" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-2563EB?style=for-the-badge" alt="MIT License" /></a>
+  <img src="https://img.shields.io/badge/Frontend-React%20%2B%20TypeScript-2563EB?style=for-the-badge&logo=react&logoColor=white" alt="React and TypeScript" />
+  <img src="https://img.shields.io/badge/Backend-FastAPI-059669?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI backend" />
+  <img src="https://img.shields.io/badge/Stage-MVP%20Preview-D97706?style=for-the-badge" alt="MVP preview stage" />
+</p>
 
-AssertLane is a planned software quality engineering platform for organizing test plans, test cases, execution history, automation artifacts, and release-readiness reviews. Its purpose is to make quality work traceable rather than to replace the testing frameworks that teams already use.
+<p align="center">
+  <a href="#overview">Overview</a> ·
+  <a href="#implemented-capabilities">Capabilities</a> ·
+  <a href="#architecture">Architecture</a> ·
+  <a href="#run-locally">Run locally</a> ·
+  <a href="#tests-and-automation">Tests & automation</a> ·
+  <a href="#security-and-release-readiness-audit">Audit</a>
+</p>
 
-> **Project status:** Initial planning and repository setup. The application, test runner, integrations, and reporting pipeline are not implemented yet.
+---
 
-## The problem
+> [!IMPORTANT]
+> **Deployment status: frontend preview is published; the full-stack application is not production-ready.** The committed React UI currently calls `http://127.0.0.1:8000` directly, the FastAPI API has no authentication or authorization, and the backend uses a local SQLite file. A deployed browser's `127.0.0.1` points to the visitor's own device—not a hosted AssertLane API. Treat the Netlify URL as a frontend preview until the deployment and security blockers below are fixed.
 
-Test cases often live in multiple places: spreadsheets, automation repositories, issue trackers, CI logs, and informal notes. This makes it difficult to understand what was tested, why a test failed, whether a failure is flaky, and whether a release has sufficient evidence.
+## Overview
 
-AssertLane is intended to provide a consistent workflow from test planning to execution evidence and retesting.
+AssertLane is a small quality-engineering MVP for organizing the evidence behind testing work. It contains a FastAPI API, SQLAlchemy models backed by SQLite, Alembic migration files, a minimal React dashboard, pytest API tests, and a Playwright demo test with a JSON report-import helper.
 
-## Planned MVP
+The intent is to distinguish a product assertion failure from an automation or environment error, retain a link between a result and the test-case version recorded at execution time, and make test activity easier to review. The current implementation is a foundation for that workflow—not yet a complete test-management or release-gating product.
 
-- Create projects, test suites, and test cases.
-- Record preconditions, steps, expected results, priority, and tags.
-- Track manual execution status and execution notes.
-- Store automated run summaries and failure details.
-- Connect a controlled demo application to a Playwright-based test workflow.
-- Import or export a documented report format where practical.
-- Show recent pass/fail trends and failed-test history.
-- Associate test failures with a bug reference and retest status.
+## Implemented capabilities
 
-### Future integrations
+| Area | Current implementation |
+|---|---|
+| Backend API | FastAPI application with a health endpoint and CRUD endpoints for projects, suites, cases, test runs and results |
+| Data model | SQLAlchemy models and Alembic migrations for projects, test suites, test cases, runs and results |
+| Result tracking | Result states include Passed, Failed, Skipped, Blocked and Error |
+| Case versioning | Updates to case steps, expected result or preconditions increment a version; a result records that version number |
+| Result import | API endpoint accepts structured report results and returns imported/failed counts |
+| Frontend | React + TypeScript page for backend status plus creating and listing projects |
+| Browser automation | One Playwright demo-page test, JSON reporter configuration and a helper that maps tagged test IDs to AssertLane result imports |
+| Local demo | FastAPI serves a small `/demo` page used by the Playwright test |
+| API exploration | FastAPI's generated OpenAPI docs are available at `/docs` when the local backend is running |
 
-Cypress, Selenium, Postman collections, Jira, and richer CI integrations are possible future adapters. They will be added only after the initial workflow is useful and tested; the project will not claim integration support without a working adapter and test evidence.
+**UI scope matters:** the current frontend only exposes project creation/listing. Suite, case, run and result operations exist as API routes, but complete management screens for those workflows are not implemented in the visible UI.
 
-## Proposed architecture
+## Architecture
 
 ~~~mermaid
 flowchart LR
-    A[Test Plans and Cases] --> C[AssertLane API]
-    B[Automation Artifacts] --> C
-    C --> D[Relational Data Store]
-    C --> E[Execution History]
-    E --> F[Release Readiness View]
-    G[Isolated Demo Test Target] --> H[Playwright Runner]
-    H --> B
+    subgraph LocalDev["Local development"]
+      UI["React + TypeScript UI"] -->|"HTTP calls to 127.0.0.1:8000"| API["FastAPI"]
+      PW["Playwright demo test"] --> DEMO["/demo"]
+      API --> CRUD["CRUD and import services"]
+      CRUD --> ORM["SQLAlchemy models"]
+      ORM --> DB[("SQLite file")]
+      REPORT["Playwright JSON report"] --> BRIDGE["push_results.js"]
+      BRIDGE -->|"POST /api/runs/{id}/import"| API
+    end
+    HOSTED["Netlify frontend preview"] -. "Current UI still targets browser-local 127.0.0.1" .-> LOOPBACK["Visitor's own device"]
+    style HOSTED fill:#15324B,stroke:#60A5FA,color:#FFFFFF
+    style LOOPBACK fill:#3F2630,stroke:#FB7185,color:#FFFFFF
 ~~~
 
-The application should distinguish a product test failure from a test-runner or infrastructure error. A timed-out browser launch, for example, should not automatically be counted as a product regression.
+The diagram describes the source as currently committed. It does **not** imply that a remote API is deployed or that the public Netlify page can communicate with a hosted backend.
 
-## Proposed technology
+## Technology stack
 
-| Area | Planned choice |
+| Layer | Technology |
 |---|---|
-| Backend | Python and FastAPI |
-| Frontend | React and TypeScript |
-| Database | PostgreSQL, with local development support |
-| Browser automation | Playwright |
-| API test artifacts | Postman collection or standardized report import |
-| CI | GitHub Actions |
-| Future issue tracking | Jira adapter |
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS, Axios |
+| Backend | Python, FastAPI, Pydantic, SQLAlchemy |
+| Local persistence | SQLite |
+| Schema migrations | Alembic |
+| API testing | pytest, FastAPI TestClient, HTTPX |
+| Browser automation | Playwright for Chromium |
+| Frontend deployment | Netlify static-site preview |
+| License | MIT |
 
-## Domain concepts
+## Run locally
 
-- **Project:** A product or service being tested.
-- **Test suite:** A logical collection of test cases.
-- **Test case:** Preconditions, steps, expected behavior, priority, and metadata.
-- **Test run:** A particular execution or manual test session.
-- **Test result:** Outcome, duration, error details, and supporting artifacts.
-- **Defect reference:** A link or identifier associated with a failure.
-- **Release assessment:** A snapshot of relevant test evidence and configured criteria.
+The instructions below are for the repository's local-development setup. The frontend-to-backend browser connection needs CORS and configurable API-origin work before the UI can be expected to operate end-to-end from a separate origin.
 
-The schema should preserve history. Editing a test case must not silently rewrite the facts recorded in an older execution.
+### 1. Start the backend
 
-## Development roadmap
+Requirements: a supported Python installation and pip.
 
-1. Design the domain model and core API contracts.
-2. Implement project, suite, and test-case management with validation.
-3. Add execution sessions and immutable result records.
-4. Build the UI for planning and reviewing test history.
-5. Create a controlled demo application and execute a small Playwright suite against it.
-6. Add report ingestion, failure categorization, and regression history.
-7. Add CI quality gates and optional external-tool adapters.
-8. Improve accessibility, authorization, auditing, and deployment documentation.
+**Windows PowerShell**
 
-## Quality and reliability strategy
+```powershell
+cd backend
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+alembic upgrade head
+uvicorn main:app --reload --host 127.0.0.1 --port 8000
+```
 
-- Unit tests for domain rules and API validation.
-- Integration tests for database behavior and transaction boundaries.
-- Frontend component and critical-flow tests.
-- Playwright tests against a controlled target.
-- Negative tests for malformed reports, missing fields, duplicate IDs, and invalid state transitions.
-- Tests that distinguish product failure, assertion failure, and infrastructure failure.
-- Reproducible fixtures so future contributors can run the suite locally.
+The API should be available locally at:
 
-## Security design
+- Health check: `http://127.0.0.1:8000/api/health`
+- Interactive API documentation: `http://127.0.0.1:8000/docs`
+- Playwright demo page: `http://127.0.0.1:8000/demo`
 
-Test definitions and imported reports should be treated as untrusted input. An eventual automation runner must not execute arbitrary uploaded code on the API server. Prefer a constrained runner, strict allowlists, execution timeouts, resource limits, and isolated credentials. Secrets must never appear in report logs.
+The database URL is currently hard-coded to `sqlite:///./assertlane.db` in the backend. Run the commands from the `backend/` directory so that the relative SQLite file and migration configuration use the expected working directory.
 
-## What this repository does not claim yet
+### 2. Start the frontend
 
-The repository currently contains the project brief and license only. There is no functioning test-management system, no completed Playwright integration, and no verified coverage or release-readiness metric yet. Badges and performance claims will be added only when real CI evidence exists.
+In a second terminal:
+
+```powershell
+cd frontend
+npm ci
+npm run dev
+```
+
+Vite prints the local development URL. The app currently hard-codes its API origin to `http://127.0.0.1:8000`. FastAPI does not currently configure CORS middleware, so browser requests from Vite or Netlify are expected to be blocked. The frontend/API origin must be made configurable and the backend must allow only the intended origins before this becomes an integrated browser workflow.
+
+### 3. Run backend tests
+
+From the backend directory, with the backend dependencies installed:
+
+```powershell
+cd backend
+python -m pytest
+```
+
+The repository contains four pytest modules covering project CRUD, suite/case workflows, run/result workflows, and report import. The current tests share a relative `test.db` file and do not fully isolate/clean their database state. The tests were reviewed as source during this audit; they were **not executed in this audit session**, so no passing-test claim is made here.
+
+## Tests and automation
+
+The `automation/` directory contains a Playwright configuration and one demo test. To prepare the browser runner locally:
+
+```powershell
+cd automation
+npm ci
+npx playwright install chromium
+npx playwright test
+```
+
+This requires the local FastAPI backend to be running. Playwright writes `automation/results.json` according to `playwright.config.ts`.
+
+### Import the Playwright report
+
+The helper `automation/push_results.js` expects both a report file and an existing AssertLane test run ID:
+
+```powershell
+$env:ASSERTLANE_RUN_ID = "<existing-test-run-uuid>"
+node .\push_results.js
+```
+
+Run the helper from the `automation/` directory, after the Playwright report exists. The demo test's `@TID-...` annotation must correspond to a test-case ID that already exists in the same local database, and the run ID must also exist. The integration helper currently posts to `127.0.0.1:8000`; it is a local-development bridge, not a remote CI integration.
+
+**Important:** `automation/package.json` still defines `npm test` as a placeholder that exits with an error. Use the explicit `npx playwright test` command above rather than assuming `npm test` works. No GitHub Actions workflow is currently committed, so there is no repository CI run or CI-backed passing status to report.
+
+## API surface
+
+| Resource | Representative routes |
+|---|---|
+| Health | `GET /api/health` |
+| Projects | `/api/projects/`, `/api/projects/{project_id}` |
+| Suites | `/api/projects/{project_id}/suites/`, `/api/suites/{suite_id}` |
+| Cases | `/api/suites/{suite_id}/cases/`, `/api/cases/{case_id}` |
+| Test runs | `/api/projects/{project_id}/runs/`, `/api/runs/{run_id}` |
+| Test results | `/api/runs/{run_id}/results/` |
+| Imported results | `POST /api/runs/{run_id}/import` |
+| Demo target | `GET /demo` |
+
+The `/docs` endpoint exposes the generated OpenAPI interface when the local API is running.
+
+## Security and release-readiness audit
+
+A source-based audit of the current `main` branch found the following blockers. These should be addressed before treating AssertLane as a public, multi-user service or entering real test data.
+
+| Severity | Finding | Why it matters |
+|---|---|---|
+| **Critical before public API exposure** | No authentication or authorization on API routes | Anyone who can reach the API can create, read, update or delete records. Do not expose this backend publicly until access controls exist. |
+| **High** | Frontend hard-codes `http://127.0.0.1:8000`; no CORS middleware is configured | The Netlify browser does not talk to a hosted AssertLane API through this URL. Separate-origin browser calls are also blocked without an intentional CORS policy. |
+| **High** | SQLite URL is hard-coded and there is no backend deployment configuration in the repository | Local SQLite is suitable for a local MVP; it is not a designed durable multi-user production storage configuration. |
+| **High** | Result/run integrity is not fully enforced | Result creation checks that the run and case exist, but does not verify that the selected case belongs to the same project's run. |
+| **High** | Historical-evidence guarantees are incomplete | A result stores a case version number, but not a full immutable snapshot of the case definition. Deleting a case or run cascades into result deletion. |
+| **High** | No committed CI workflow; automation `npm test` is a failing placeholder | The presence of test files and a Playwright config is not proof that tests run in CI or that the current branch is green. |
+| **Medium** | Test database isolation needs work | Test modules use the same relative `test.db` and don't consistently reset state, which can make tests order-dependent or leak state between runs. |
+| **Medium** | Input/lifecycle constraints need tightening | Imported result batches are not bounded, pagination parameters are not constrained, and run status transitions are not enforced as a state machine. |
+| **Medium** | Some update schemas allow explicit null for fields backed by non-null database columns | Invalid updates may reach the database and become server errors instead of a clean validation response. |
+| **Medium** | Playwright bridge assumes local state and does not make remote delivery reliable | The helper uses a loopback URL and logs caught errors; it is not yet a robust, authenticated CI-to-server reporter. |
+
+### Recommended order of work
+
+1. **Fix deployment architecture:** provide an environment-driven API base URL, deploy the API on a backend-capable host, configure an explicit CORS allowlist, and verify the live end-to-end flow.
+2. **Add security controls before public backend exposure:** authentication, authorization, ownership checks for every resource, rate/body limits, safe secrets management, and a deployment-specific threat review.
+3. **Protect data integrity:** ensure a test case and run belong to the same project; validate result batches and legal run-state transitions; define whether old evidence is immutable or deletable and implement that policy.
+4. **Make evidence genuinely reproducible:** store historical case-definition snapshots or revisions, isolate test databases, add failure-path tests and a repeatable test setup.
+5. **Add CI:** use a real Playwright test command, configure backend and frontend checks, run migrations/tests against a clean database, and publish an honest status badge only after checks are configured.
+
+The external Netlify page could not be independently inspected by the audit browsing path in this session. Deployment conclusions above are therefore based on the committed frontend and backend configuration, not a claim that a live browser test was performed.
+
+## Roadmap
+
+- [ ] Configure a deployable API base URL and hosting-compatible backend
+- [ ] Add explicit CORS policy and an authenticated authorization model
+- [ ] Build the suite, case, run and result views in the frontend
+- [ ] Enforce project/run/case relationships and legal state transitions
+- [ ] Preserve reconstructable historical test-case revisions
+- [ ] Bound report imports and validate pagination/input constraints
+- [ ] Isolate tests and configure automated CI
+- [ ] Replace the placeholder `npm test` script with a real test command
+- [ ] Make result upload configurable, authenticated, and failure-aware
+- [ ] Add deployment, backup, migration and operational documentation
+
+## Repository layout
+
+```text
+.
+├── backend/
+│   ├── main.py                 # FastAPI routes
+│   ├── models.py               # SQLAlchemy data models
+│   ├── schemas.py              # Pydantic request/response schemas
+│   ├── crud.py                 # Database operations
+│   ├── database.py             # SQLite engine/session
+│   ├── migrations/             # Alembic migrations
+│   └── tests/                  # pytest API tests
+├── frontend/
+│   ├── src/App.tsx             # Current project list/create UI
+│   └── package.json
+├── automation/
+│   ├── tests/demo.spec.ts      # Playwright demo test
+│   ├── playwright.config.ts    # JSON report configuration
+│   └── push_results.js         # Local report-to-API bridge
+├── docs/
+│   ├── PROJECT_STATE.md
+│   └── DECISIONS.md
+├── assets/
+│   └── assertlane-banner.svg
+└── LICENSE
+```
 
 ## Author & Development
 
@@ -109,4 +253,3 @@ This project is independently developed and maintained by Nurul Faiyaz. AI-assis
 ## License
 
 MIT. See [LICENSE](LICENSE).
-
