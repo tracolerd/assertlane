@@ -105,3 +105,8 @@ def create_result(run_id: str, result_item: schemas.TestResultCreate, db: Sessio
 def read_results(run_id: str, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     if not crud.get_test_run(db, run_id): raise HTTPException(status_code=404, detail="Test Run not found")
     return crud.get_test_results(db, run_id=run_id, skip=skip, limit=limit)
+@app.post("/api/runs/{run_id}/import", response_model=schemas.ImportReportResponse, status_code=201)
+def import_results(run_id: str, report: schemas.ImportReportRequest, db: Session = Depends(get_db)):
+    if not crud.get_test_run(db, run_id):
+        raise HTTPException(status_code=404, detail="Test Run not found")
+    return crud.import_test_results(db=db, run_id=run_id, report=report)

@@ -115,3 +115,28 @@ def create_test_result(db: Session, run_id: str, result_item: schemas.TestResult
     db.commit()
     db.refresh(db_item)
     return db_item
+# Import Results Bulk
+def import_test_results(db: Session, run_id: str, report: schemas.ImportReportRequest):
+    imported = 0
+    errors = []
+    for item in report.results:
+        case = get_test_case(db, item.test_case_id)
+        if not case:
+            errors.append(f"TestCase {item.test_case_id} not found.")
+            continue
+        db_item = models.TestResult(
+            test_run_id=run_id,
+            test_case_id=case.id,
+            test_case_version=case.version,
+            status=item.status,
+            notes=item.notes,
+            execution_time_ms=item.execution_time_ms
+        )
+        db.add(db_item)
+        imported += 1
+    db.commit()
+    return schemas.ImportReportResponse(
+        imported_count=imported, 
+        failed_count=len(errors), 
+        errors=errors
+    )

@@ -84,3 +84,16 @@ class TestResultResponse(BaseModel):
     execution_time_ms: Optional[int] = None
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)
+# Import Report Schemas
+class ImportResultItem(BaseModel):
+    test_case_id: str
+    status: ResultStatus
+    notes: Optional[str] = None
+    execution_time_ms: Optional[int] = None
+class ImportReportRequest(BaseModel):
+    reporter: str
+    results: List[ImportResultItem]
+class ImportReportResponse(BaseModel):
+    imported_count: int
+    failed_count: int
+    errors: List[str]
