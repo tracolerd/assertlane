@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Turn test activity into evidence for release decisions.</strong><br/>
-  Track projects, test cases, execution runs and imported results—with a clear path from quality work to release review.
+  Track projects, test cases, execution runs and imported results, connecting recorded test activity to release review.
 </p>
 
 <p align="center">
