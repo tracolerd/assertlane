@@ -1,7 +1,8 @@
 ﻿from pydantic import BaseModel, ConfigDict
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
-# Project Schemas
+from models import RunStatus, ResultStatus
+# Project
 class ProjectBase(BaseModel):
     name: str
     description: Optional[str] = None
@@ -14,7 +15,7 @@ class ProjectResponse(ProjectBase):
     created_at: datetime
     updated_at: datetime
     model_config = ConfigDict(from_attributes=True)
-# TestSuite Schemas
+# TestSuite
 class TestSuiteBase(BaseModel):
     name: str
     description: Optional[str] = None
@@ -28,7 +29,7 @@ class TestSuiteResponse(TestSuiteBase):
     created_at: datetime
     updated_at: datetime
     model_config = ConfigDict(from_attributes=True)
-# TestCase Schemas
+# TestCase
 class TestCaseBase(BaseModel):
     title: str
     preconditions: Optional[str] = None
@@ -50,4 +51,36 @@ class TestCaseResponse(TestCaseBase):
     version: int
     created_at: datetime
     updated_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+# TestRun
+class TestRunBase(BaseModel):
+    name: str
+class TestRunCreate(TestRunBase): pass
+class TestRunUpdate(BaseModel):
+    name: Optional[str] = None
+    status: Optional[RunStatus] = None
+class TestRunResponse(TestRunBase):
+    id: str
+    project_id: str
+    status: RunStatus
+    started_at: Optional[datetime] = None
+    ended_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+# TestResult (Append Only)
+class TestResultCreate(BaseModel):
+    test_case_id: str
+    status: ResultStatus
+    notes: Optional[str] = None
+    execution_time_ms: Optional[int] = None
+class TestResultResponse(BaseModel):
+    id: str
+    test_run_id: str
+    test_case_id: str
+    test_case_version: int
+    status: ResultStatus
+    notes: Optional[str] = None
+    execution_time_ms: Optional[int] = None
+    created_at: datetime
     model_config = ConfigDict(from_attributes=True)
