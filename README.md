@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/assertlane-banner.svg" alt="AssertLane — animated quality engineering and release-evidence banner" width="100%" />
+  <img src="assets/assertlane-banner.svg" alt="AssertLane — test execution evidence and release-readiness interface illustration" width="100%" />
 </p>
 
 <h1 align="center">AssertLane</h1>
