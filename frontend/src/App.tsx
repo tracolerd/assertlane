@@ -15,7 +15,7 @@ function App() {
   const fetchProjects = () => {
     api.get('/api/projects/')
       .then(res => setProjects(res.data))
-      .catch(err => console.error(err));
+      .catch(() => setStatus('Could not load projects. Check API availability and CORS.'));
   };
   useEffect(() => {
     api.get('/api/health')
@@ -23,7 +23,7 @@ function App() {
         setStatus(res.data.message);
         fetchProjects();
       })
-      .catch(() => setStatus('Backend offline or CORS error.'));
+      .catch(() => setStatus('Backend offline or CORS error. Check VITE_API_BASE_URL.'));
   }, []);
   const handleCreateProject = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +35,7 @@ function App() {
         setDescription('');
         fetchProjects();
       })
-      .catch(() => alert('Error creating project'))
+      .catch(() => setStatus('Could not create project. Check API availability and request validation.'))
       .finally(() => setLoading(false));
   };
   return (
