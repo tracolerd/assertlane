@@ -1,7 +1,5 @@
 ﻿import { useEffect, useState } from 'react';
 import { api } from './api';
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000").replace(/\\/+$/, "");
-
 interface Project {
   id: string;
   name: string;
@@ -17,7 +15,7 @@ function App() {
   const fetchProjects = () => {
     api.get('/api/projects/')
       .then(res => setProjects(res.data))
-      .catch(() => setStatus('Could not load projects. Check API configuration and CORS.'));
+      .catch(() => setStatus('Could not load projects. Check API availability and CORS.'));
   };
   useEffect(() => {
     api.get('/api/health')
@@ -37,7 +35,7 @@ function App() {
         setDescription('');
         fetchProjects();
       })
-      .catch(() => alert('Error creating project'))
+      .catch(() => setStatus('Could not create project. Check API availability and request validation.'))
       .finally(() => setLoading(false));
   };
   return (
