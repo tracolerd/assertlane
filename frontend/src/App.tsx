@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { api } from './api';
 interface Project {
   id: string;
   name: string;
@@ -13,12 +13,12 @@ function App() {
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
   const fetchProjects = () => {
-    axios.get('http://127.0.0.1:8000/api/projects/')
+    api.get('/api/projects/')
       .then(res => setProjects(res.data))
       .catch(err => console.error(err));
   };
   useEffect(() => {
-    axios.get('http://127.0.0.1:8000/api/health')
+    api.get('/api/health')
       .then(res => {
         setStatus(res.data.message);
         fetchProjects();
@@ -29,13 +29,13 @@ function App() {
     e.preventDefault();
     if (!name.trim()) return;
     setLoading(true);
-    axios.post('http://127.0.0.1:8000/api/projects/', { name, description })
+    api.post('/api/projects/', { name, description })
       .then(() => {
         setName('');
         setDescription('');
         fetchProjects();
       })
-      .catch(err => alert('Error creating project'))
+      .catch(() => alert('Error creating project'))
       .finally(() => setLoading(false));
   };
   return (
