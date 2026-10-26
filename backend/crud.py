@@ -100,9 +100,22 @@ def delete_test_run(db: Session, run_id: str):
     return db_item
 # TestResult CRUD
 def get_test_results(db: Session, run_id: str, skip: int = 0, limit: int = 100): return db.query(models.TestResult).filter(models.TestResult.test_run_id == run_id).offset(skip).limit(limit).all()
+def test_case_matches_run_project(db: Session, run_id: str, case_id: str) -> bool:
+    """Return whether the case's suite belongs to the project owning this run."""
+    run = get_test_run(db, run_id)
+    case = get_test_case(db, case_id)
+    if not run or not case:
+        return False
+    suite = get_test_suite(db, case.suite_id)
+    return bool(suite and suite.project_id == run.project_id)
+
+
 def create_test_result(db: Session, run_id: str, result_item: schemas.TestResultCreate):
     case = get_test_case(db, result_item.test_case_id)
-    if not case: return None # Router will handle 404
+    if not case:
+        return None  # Router will handle the missing case
+    if not test_case_matches_run_project(db, run_id, case.id):
+        return None  # The route distinguishes cross-project references from missing cases
     db_item = models.TestResult(
         test_run_id=run_id,
         test_case_id=case.id,
@@ -123,6 +136,11 @@ def import_test_results(db: Session, run_id: str, report: schemas.ImportReportRe
         case = get_test_case(db, item.test_case_id)
         if not case:
             errors.append(f"TestCase {item.test_case_id} not found.")
+            continue
+        if not test_case_matches_run_project(db, run_id, case.id):
+            errors.append(
+                f"TestCase {item.test_case_id} does not belong to the project associated with run {run_id}."
+            )
             continue
         db_item = models.TestResult(
             test_run_id=run_id,
