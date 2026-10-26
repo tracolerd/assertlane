@@ -80,3 +80,52 @@ def test_create_test_result_and_immutability(base_data, test_run):
     # Check that old result is untouched
     old_results = client.get(f"/api/runs/{test_run['id']}/results/").json()
     assert old_results[0]["test_case_version"] == 1
+
+
+
+def test_result_rejects_case_from_different_project(test_run):
+    foreign_project = client.post(
+        "/api/projects/", json={"name": "Unrelated Project"}
+    ).json()
+    foreign_suite = client.post(
+        f"/api/projects/{foreign_project['id']}/suites/",
+        json={"name": "Unrelated Suite"},
+    ).json()
+    foreign_case = client.post(
+        f"/api/suites/{foreign_suite['id']}/cases/",
+        json={"title": "Foreign Case", "steps": "step", "expected_result": "result"},
+    ).json()
+
+    response = client.post(
+        f"/api/runs/{test_run['id']}/results/",
+        json={"test_case_id": foreign_case["id"], "status": "Passed"},
+    )
+    assert response.status_code == 422
+    assert "does not belong to the project" in response.json()["detail"]
+
+
+def test_result_import_skips_case_from_different_project(test_run):
+    foreign_project = client.post(
+        "/api/projects/", json={"name": "Foreign Import Project"}
+    ).json()
+    foreign_suite = client.post(
+        f"/api/projects/{foreign_project['id']}/suites/",
+        json={"name": "Foreign Import Suite"},
+    ).json()
+    foreign_case = client.post(
+        f"/api/suites/{foreign_suite['id']}/cases/",
+        json={"title": "Foreign Import Case", "steps": "step", "expected_result": "result"},
+    ).json()
+
+    response = client.post(
+        f"/api/runs/{test_run['id']}/import",
+        json={
+            "reporter": "relationship-integrity-test",
+            "results": [{"test_case_id": foreign_case["id"], "status": "Passed"}],
+        },
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["imported_count"] == 0
+    assert data["failed_count"] == 1
+    assert "does not belong to the project" in data["errors"][0]

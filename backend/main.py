@@ -116,9 +116,20 @@ def delete_run(run_id: str, db: Session = Depends(get_db)):
 # --- TEST RESULT ENDPOINTS ---
 @app.post("/api/runs/{run_id}/results/", response_model=schemas.TestResultResponse, status_code=201)
 def create_result(run_id: str, result_item: schemas.TestResultCreate, db: Session = Depends(get_db)):
-    if not crud.get_test_run(db, run_id): raise HTTPException(status_code=404, detail="Test Run not found")
+    run = crud.get_test_run(db, run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail="Test Run not found")
+    case = crud.get_test_case(db, result_item.test_case_id)
+    if not case:
+        raise HTTPException(status_code=404, detail="TestCase not found")
+    if not crud.test_case_matches_run_project(db, run_id, case.id):
+        raise HTTPException(
+            status_code=422,
+            detail="Test case does not belong to the project associated with this test run.",
+        )
     db_result = crud.create_test_result(db=db, run_id=run_id, result_item=result_item)
-    if not db_result: raise HTTPException(status_code=404, detail="TestCase not found")
+    if not db_result:
+        raise HTTPException(status_code=422, detail="Test result violates project/run/case relationship integrity.")
     return db_result
 @app.get("/api/runs/{run_id}/results/", response_model=List[schemas.TestResultResponse])
 def read_results(run_id: str, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
