@@ -1,9 +1,28 @@
-﻿from fastapi import FastAPI, Depends, HTTPException
+﻿import os
+from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
 import models, schemas, crud
 from database import get_db
 app = FastAPI(title="AssertLane API", description="Quality Engineering Platform API", version="0.1.0")
+
+# CORS only controls which browser origins may read API responses; it is not
+# authentication or authorization. Configure comma-separated origins for each
+# deployed frontend environment.
+_default_origins = "http://localhost:5173,http://127.0.0.1:5173"
+_allowed_origins = [
+    origin.strip()
+    for origin in os.getenv("ASSERTLANE_CORS_ORIGINS", _default_origins).split(",")
+    if origin.strip()
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_allowed_origins,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
+)
 @app.get("/api/health")
 def health_check(): return {"status": "ok", "message": "AssertLane backend is operational"}
 # --- PROJECT ENDPOINTS ---
