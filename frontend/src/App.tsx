@@ -35,7 +35,7 @@ function App() {
         setDescription('');
         fetchProjects();
       })
-      .catch(err => alert('Error creating project'))
+      .catch(() => alert('Error creating project'))
       .finally(() => setLoading(false));
   };
   return (
