@@ -280,3 +280,7 @@ MIT. See [LICENSE](LICENSE).
 The React client reads its API base URL from `VITE_API_BASE_URL`. For local development, copy `frontend/.env.example` to `frontend/.env.local` and keep the local FastAPI URL. A production build requires `VITE_API_BASE_URL` to be set explicitly; a hosted browser cannot reach a developer's `127.0.0.1`.
 
 The API's browser-origin allowlist is configured separately with `ASSERTLANE_CORS_ORIGINS` on the backend. CORS is not authentication or authorization; this MVP still must not be exposed to untrusted users until the security gaps listed above are resolved.
+
+---
+
+<p align="center"><sub>Portfolio catalog · Project 05 of 22 · <a href="https://github.com/tracolerd">Nurul Faiyaz</a></sub></p>
