@@ -18,3 +18,4 @@
 - [2026-11-04 07:46:38 UTC] Release readiness and documentation audit checkpoint #205
 - [2026-11-04 07:53:07 UTC] Release readiness and documentation audit checkpoint #217
 - [2026-11-04 07:59:26 UTC] Release readiness and documentation audit checkpoint #229
+- [2026-11-04 08:05:47 UTC] Release readiness and documentation audit checkpoint #241
